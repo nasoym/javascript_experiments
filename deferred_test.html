@@ -1,0 +1,89 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title></title>
+  <meta charset="UTF-8">
+  <script type="application/javascript" src="jquery-3.2.1.min.js"></script>
+  <script type="application/javascript" src="jqueryExtensions.js"></script>
+</head>
+<body>
+  <pre id="foo" style="padding:20px;"></pre>
+</body>
+<script type="application/javascript">
+
+  function addRawText(text) {
+    $('#foo').text($('#foo').text() + text + "\n");
+  }
+  function addLogText(text) {
+    addRawText(new Date().toISOString() + ":  " + text);
+  }
+
+  function delay(message,timeout,succeed = true,response = "abc") {
+    return function () {
+      addLogText(message + ": " + "start");
+      var deferred = $.Deferred();
+      setTimeout(function () {
+        if (succeed) {
+          addLogText(message + ": " + "succeed");
+          deferred.resolve(response); 
+        }
+        else {
+          addLogText(message + ": " + "fail");
+          deferred.reject(response); 
+        }
+      }, timeout);
+      return deferred.promise();
+    };
+  }
+
+  function log(text) {
+    return function (response) {
+      addLogText(text + ": " + response);
+    };
+  }
+
+  function logfailure(text) {
+    return function (response) {
+      addLogText(text + ": " + response);
+      throw text;
+    };
+  }
+
+
+  addLogText("start");
+  // delay("start",1000)()
+  //   .then(delay("one", 1000,false),log("one fail"))
+  //   .then(delay("two", 1000),log("two fail"))
+  //   .then(delay("three", 1000),log("three fail"))
+  //   .then(log("finish"))
+  //   ;
+
+
+  // delay("start one",1000,false)()
+  //   .pipe(
+  //     function() {
+  //       delay("start two",1000)()
+  //         .pipe(
+  //           function() {
+  //           }
+  //         )
+  //       ;
+  //     }
+  //   )
+  //   ;
+
+  delay("one",1000)()
+    .then(delay("two", 1000))
+    .then(delay("three", 1000, false))
+    .then(delay("four", 1000), function() {
+      addLogText("BBBBBBBBBB");
+      throw "FOO";
+    })
+    .then(delay("five", 1000))
+    .then(log("finish"))
+    .fail(log("FAIL  !!!"))
+    ;
+
+
+</script>
+</html>
